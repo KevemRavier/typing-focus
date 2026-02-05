@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Typing Focus - Multiplayer</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" crossorigin="anonymous" />
+    <style>
+        #modal-fim-partida .modal-content {
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+        }
+        
+        #modal-fim-partida .card {
+            transition: transform 0.3s ease;
+            border: none;
+        }
+        
+        #modal-fim-partida .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        #modal-fim-partida .display-3 {
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal.fade .modal-dialog {
+            transform: scale(0.8);
+            transition: transform 0.3s ease-out;
+        }
+        
+        .modal.show .modal-dialog {
+            transform: scale(1);
+        }
+        
+        #tela-reiniciar {
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        #tela-reiniciar .player-card {
+            min-width: 200px;
+        }
+        
+        .blur-temp {
+            filter: blur(12px);
+            transition: filter 0.3s ease;
+        }
+        
+        #palavra-atual span {
+            display: inline-block;
+            animation: pular-forte 0.4s ease-in-out infinite;
+            animation-fill-mode: forwards;
+            animation-delay: var(--delay);
+        }
+        
+        @keyframes pular-forte {
+            0%,
+            100% {
+                transform: translateY(0) scale(0.5);
+            }
+            50% {
+                transform: translateY(-25vh) scale(1.3);
+            }
+        }
+        
+        .palavra-disfarce {
+            opacity: 0.06;
+            transition: opacity 0.08s ease;
+            color: #101010;
+            transition: color 0.3s ease;
+        }
+        
+        .tremendo {
+            animation: tremor-instavel 0.05s linear infinite;
+        }
+        
+        @keyframes tremor-instavel {
+            0% {
+                transform: translate(6px, 12px) rotate(10deg);
+                filter: blur(5px);
+            }
+            10% {
+                transform: translate(-10px, -8px) rotate(-12deg);
+                filter: blur(6px);
+            }
+            20% {
+                transform: translate(-10px, 10px) rotate(8deg);
+                filter: blur(7px);
+            }
+            30% {
+                transform: translate(9px, 12px) rotate(15deg);
+                filter: blur(6.7px);
+            }
+            40% {
+                transform: translate(-9px, -10px) rotate(-10deg);
+                filter: blur(7px);
+            }
+            50% {
+                transform: translate(10px, 15px) rotate(12deg);
+                filter: blur(4.5px);
+            }
+            60% {
+                transform: translate(-9px, 12px) rotate(-13deg);
+                filter: blur(5px);
+            }
+            70% {
+                transform: translate(10px, -9px) rotate(8.5deg);
+                filter: blur(6.5px);
+            }
+            80% {
+                transform: translate(-9px, 12px) rotate(-10.5deg);
+                filter: blur(5.5px);
+            }
+            90% {
+                transform: translate(10px, -12px) rotate(12deg);
+                filter: blur(5.5px);
+            }
+        }
+        
+        .player-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px 0;
+            border: 2px solid #4a5568;
+        }
+        
+        .player-card.me {
+            border-color: #48bb78;
+        }
+        
+        .player-card.opponent {
+            border-color: #f56565;
+        }
+        
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 1000;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        
+        .status-connected {
+            background: #48bb78;
+        }
+        
+        .status-disconnected {
+            background: #f56565;
+        }
+        
+        .status-waiting {
+            background: #ed8936;
+        }
+        
+        #peer-id-display {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        
+        .winner-banner {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 40px 60px;
+            border-radius: 20px;
+            z-index: 2000;
+            display: none;
+            text-align: center;
+            border: 3px solid gold;
+        }
+        
+        .winner-banner.show {
+            display: block;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%,
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.05);
+            }
+        }
+        
+        #tela-espera {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2500;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid #333;
+            border-top: 5px solid #48bb78;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        
+        #tela-revanche {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 3000;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .revanche-botoes {
+            margin-top: 30px;
+        }
+        
+        .revanche-botoes button {
+            margin: 0 10px;
+            min-width: 150px;
+        }
+        
+        .placar-revanche {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px 40px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #ffd700;
+        }
+        
+        .vs-divider {
+            font-size: 2rem;
+            color: #ffd700;
+            margin: 0 20px;
+        }
+        
+        @keyframes solicitar-pulse {
+            0%,
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 20px 10px rgba(72, 187, 120, 0);
+            }
+        }
+        
+        .solicitando-revanche {
+            animation: solicitar-pulse 1.5s infinite;
+        }
+    </style>
+    <base target="_blank">
+</head>
+
+<body class="bg-dark text-white">
+    <header class="bg-secondary text-center p-3 mb-5">
+        <h1>Foco na Digitação - Multiplayer 1v1</h1>
+    </header>
+
+    <div class="connection-status" id="connection-status">
+        <span class="status-dot status-disconnected" id="status-dot"></span>
+        <span id="status-text">Desconectado</span>
+    </div>
+
+    <div class="winner-banner" id="winner-banner">
+        <h1 class="display-1">🏆</h1>
+        <h2 id="winner-text"></h2>
+    </div>
+
+    <div id="tela-espera">
+        <div class="spinner"></div>
+        <h2>Aguardando host escolher a dificuldade...</h2>
+        <p class="text-muted mt-2">O criador da sala está selecionando o nível</p>
+    </div>
+
+    <div id="tela-revanche">
+        <h1 class="mb-4">🏆 Fim da Partida</h1>
+        <div class="placar-revanche">
+            <div class="row align-items-center">
+                <div class="col text-center">
+                    <h4>🎮 Você</h4>
+                    <h1 class="display-2 text-success" id="revanche-meus-pontos">0</h1>
+                    <small>vitórias</small>
+                </div>
+                <div class="col-auto vs-divider">VS</div>
+                <div class="col text-center">
+                    <h4>👤 Oponente</h4>
+                    <h1 class="display-2 text-danger" id="revanche-oponente-pontos">0</h1>
+                    <small>vitórias</small>
+                </div>
+            </div>
+        </div>
+        <div id="revanche-conteudo">
+            <h3 id="revanche-mensagem"></h3>
+            <div class="revanche-botoes" id="revanche-botoes"></div>
+        </div>
+        <div id="revanche-aguardando" style="display: none;">
+            <div class="spinner"></div>
+            <h3>Aguardando resposta...</h3>
+        </div>
+    </div>
+
+    <div id="tela-modo" class="container text-center">
+        <h2 class="mb-4">Escolha o Modo de Jogo</h2>
+        <button class="btn btn-primary btn-lg m-2" onclick="escolherModo('single')">🎮 Modo Solo</button>
+        <button class="btn btn-success btn-lg m-2" onclick="escolherModo('multi')">👥 Multiplayer 1v1</button>
+    </div>
+
+    <div id="tela-multiplayer" class="container" style="display: none;">
+        <h2 class="text-center mb-4">Configurar Multiplayer</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card bg-secondary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">🎯 Criar Sala</h5>
+                        <p class="card-text">Crie uma sala e compartilhe seu ID com o oponente</p>
+                        <div id="peer-id-display" style="display: none;">
+                            <strong>Seu ID:</strong> <span id="my-peer-id"></span>
+                            <button class="btn btn-sm btn-info ml-2" onclick="copiarPeerId()">📋 Copiar</button>
+                        </div>
+                        <button class="btn btn-success btn-block" id="btn-criar-sala">Criar Sala</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-secondary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">🔗 Entrar na Sala</h5>
+                        <p class="card-text">Digite o ID da sala para se conectar</p>
+                        <input type="text" class="form-control mb-2" id="input-peer-id" placeholder="Cole o ID aqui">
+                        <button class="btn btn-primary btn-block" id="btn-conectar">Conectar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <button class="btn btn-secondary" onclick="voltarParaModo()">⬅️ Voltar</button>
+        </div>
+    </div>
+
+    <div id="tela-nivel" class="container text-center" style="display: none;">
+        <h2 class="mb-4">Escolha a dificuldade</h2>
+        <div id="botoes-nivel">
+            <button class="btn btn-success btn-lg m-2" onclick="selecionarNivel('facil')">Fácil</button>
+            <button class="btn btn-warning btn-lg m-2" onclick="selecionarNivel('medio')">Médio</button>
+            <button class="btn btn-danger btn-lg m-2" onclick="selecionarNivel('dificil')">Difícil</button>
+        </div>
+        <div class="card bg-secondary text-white mt-4">
+            <div class="card-body">
+                <h5 class="card-title">Regras do Jogo</h5>
+                <p class="card-text">
+                    • O objetivo é digitar a palavra exibida antes do tempo acabar.<br> • Palavras fáceis têm mais tempo. Difíceis são mais rápidas.<br> • Cada acerto vale 1 ponto. Se errar ou deixar o tempo acabar, o placar zera.<br>
+                    <strong id="regra-multiplayer" style="display: none;">No multiplayer: Primeiro jogador a atingir 20 pontos vence!</strong>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="tela-jogo" style="display: none;">
+        <div class="container">
+            <div id="multiplayer-scoreboard" style="display: none;">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="player-card me">
+                            <h4>🎮 Você</h4>
+                            <h2 class="display-4" id="my-score">0</h2>
+                            <small>pontos</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="player-card opponent">
+                            <h4>👤 Oponente</h4>
+                            <h2 class="display-4" id="opponent-score">0</h2>
+                            <small>pontos</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mx-auto">
+                    <p class="lead">Digite a palavra no tempo de <span class="text-success" id="segundos">10</span> segundos:</p>
+                    <h2 class="display-2 mb-5" id="palavra-atual">foco</h2>
+                    <input type="text" class="form-control form-control-lg" placeholder="Digite aqui..." id="input-palavra" autofocus />
+                    <h4 class="mt-3" id="mensagem"></h4>
+                    <div class="d-flex flex-column align-items-center mt-4">
+                        <button class="btn btn-primary mb-2" id="btn-voltar-nivel">Voltar para seleção</button>
+                        <button class="btn btn-danger" id="btn-reiniciar" style="display: none;">Reiniciar jogo</button>
+                    </div>
+                    <div class="row mt-5">
+                        <div class="col-md-6">
+                            <h3>Tempo Restante: <span id="tempo">0</span></h3>
+                        </div>
+                        <div class="col-md-6">
+                            <h3>Pontos: <span id="pontos">0</span></h3>
+                        </div>
+                        <div class="col mt-3" id="single-best-score">
+                            <h3>Maior pontuação: <span id="maior-pontos">0</span></h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="main.js"></script>
+</body>
+
+</html>
