@@ -566,7 +566,10 @@ function iniciar() {
     pararDvd();
     resetarPosicaoPalavra();
 
-    if (!modoMultiplayer) iniciarTimer();
+    if (!modoMultiplayer) {
+        jogoIniciado = true;
+        iniciarTimer();
+    }
 
     if (modoMultiplayer) {
         document.getElementById('my-score').textContent = pontos;
