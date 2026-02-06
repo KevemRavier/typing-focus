@@ -43,6 +43,15 @@ const btnVoltarNivel = document.getElementById('btn-voltar-nivel');
 const btnCriarSala = document.getElementById('btn-criar-sala');
 const btnConectar = document.getElementById('btn-conectar');
 const inputPeerId = document.getElementById('input-peer-id');
+// Audio elements
+const bgMusic = document.getElementById('bg-music');
+const soundCorrect = document.getElementById('sound-correct');
+const soundWin = document.getElementById('sound-win');
+const soundLose = document.getElementById('sound-lose');
+const musicToggle = document.getElementById('music-toggle');
+
+let musicPlaying = false;
+
 
 // ===== CONFIGURAÇÃO DE NÍVEIS =====
 const niveis = {
@@ -92,17 +101,26 @@ function escolherModo(modo) {
     }
 }
 
+// FUNÇÃO ATUALIZADA PARA VOLTAR À TELA DE MODO
 function voltarParaModo() {
+    // Esconde todas as telas
     document.getElementById('tela-multiplayer').style.display = 'none';
-    document.getElementById('tela-modo').style.display = 'block';
+    document.getElementById('tela-nivel').style.display = 'none';
     document.getElementById('tela-revanche').style.display = 'none';
+    document.getElementById('tela-jogo').style.display = 'none';
+    
+    // Mostra tela de modo
+    document.getElementById('tela-modo').style.display = 'block';
 
+    // Reseta variáveis multiplayer
     minhasVitorias = 0;
     vitoriasOponente = 0;
     souHost = false;
     revancheSolicitada = false;
     souVencedorUltima = false;
+    modoMultiplayer = false;
 
+    // Limpa PeerJS se estiver ativo
     if (peer) {
         peer.destroy();
         peer = null;
@@ -557,7 +575,7 @@ function iniciar() {
     inputPalavra.disabled = false;
     inputPalavra.focus();
 
-    mensagem.innerHTML = modoMultiplayer ? 'Digite a palavra para iniciar!' : '';
+    mensagem.innerHTML = 'Digite a palavra para iniciar!';
     mensagem.style.color = 'yellow';
     telaPontos.innerHTML = pontos;
     telaTempo.innerHTML = tempoPadrao;
@@ -566,10 +584,8 @@ function iniciar() {
     pararDvd();
     resetarPosicaoPalavra();
 
-    if (!modoMultiplayer) {
-        jogoIniciado = true;
-        iniciarTimer();
-    }
+    // No modo solo, o timer inicia na primeira palavra digitada
+    // No multiplayer, o host inicia quando escolhe o nível
 
     if (modoMultiplayer) {
         document.getElementById('my-score').textContent = pontos;
@@ -607,14 +623,13 @@ function atualizarDisplayPalavra() {
 
 inputPalavra.addEventListener('input', () => {
     if (inputPalavra.value === palavraOriginal) {
-        if (modoMultiplayer && !jogoIniciado) {
+        // Inicia o jogo na primeira palavra (tanto solo quanto multiplayer)
+        if (!jogoIniciado) {
             jogoIniciado = true;
-            mensagem.innerHTML = 'Correto!!';
-            mensagem.style.color = 'green';
-        } else {
-            mensagem.innerHTML = 'Correto!!';
-            mensagem.style.color = 'green';
         }
+
+        mensagem.innerHTML = 'Correto!!';
+        mensagem.style.color = 'green';
 
         pontos++;
         inputPalavra.value = '';
@@ -705,7 +720,35 @@ btnReiniciar.addEventListener('click', () => {
     btnReiniciar.style.display = 'none';
     inputPalavra.focus();
 });
+// Toggle music
+musicToggle.addEventListener('click', () => {
+    if (musicPlaying) {
+        bgMusic.pause();
+        musicToggle.textContent = '🎵 Música: OFF';
+    } else {
+        bgMusic.play().catch(e => console.log('Audio play failed:', e));
+        musicToggle.textContent = '🎵 Música: ON';
+    }
+    musicPlaying = !musicPlaying;
+});
 
+// Play correct sound
+function playCorrectSound() {
+    soundCorrect.currentTime = 0;
+    soundCorrect.play().catch(e => console.log('Audio play failed:', e));
+}
+
+// Play win sound
+function playWinSound() {
+    soundWin.currentTime = 0;
+    soundWin.play().catch(e => console.log('Audio play failed:', e));
+}
+
+// Play lose sound
+function playLoseSound() {
+    soundLose.currentTime = 0;
+    soundLose.play().catch(e => console.log('Audio play failed:', e));
+}
 btnVoltarNivel.addEventListener('click', () => {
     pararTimer();
     if (modoMultiplayer) {
