@@ -7,6 +7,16 @@
     <title>Typing Focus - solo e multiplayer</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" crossorigin="anonymous" />
     <style>
+    
+    
+    #palavra-atual {
+    text-align: center;
+    width: 100%;
+}
+
+.lead {
+    text-align: center;
+}
         #modal-fim-partida .modal-content {
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
         }
@@ -394,6 +404,10 @@
             <button class="btn btn-warning btn-lg m-2" onclick="selecionarNivel('medio')">Médio</button>
             <button class="btn btn-danger btn-lg m-2" onclick="selecionarNivel('dificil')">Difícil</button>
         </div>
+        <!-- BOTÃO VOLTAR PARA TELA DE MODO -->
+        <div id="voltar-modo-container" class="mt-3">
+            <button class="btn btn-secondary btn-lg" onclick="voltarParaModo()">⬅️ Voltar</button>
+        </div>
         <div class="card bg-secondary text-white mt-4">
             <div class="card-body">
                 <h5 class="card-title">Regras do Jogo</h5>
@@ -441,7 +455,8 @@
                         <div class="col-md-6">
                             <h3>Pontos: <span id="pontos">0</span></h3>
                         </div>
-                        <div class="col mt-3" id="single-best-score">
+                        <!-- PONTUAÇÃO MÁXIMA CENTRALIZADA -->
+                        <div class="col-12 mt-3 text-center" id="single-best-score">
                             <h3>Maior pontuação: <span id="maior-pontos">0</span></h3>
                         </div>
                     </div>
@@ -449,9 +464,26 @@
             </div>
         </div>
     </div>
+<!-- Audio Elements -->
+<audio id="bg-music" loop>
+    <source src="bgmusic.mp3" type="audio/mpeg">
+</audio>
+<audio id="sound-correct">
+    <source src="acerto.mp3" type="audio/mpeg">
+</audio>
+<audio id="sound-win">
+    <source src="path/to/win.mp3" type="audio/mpeg">
+</audio>
+<audio id="sound-lose">
+    <source src="path/to/lose.mp3" type="audio/mpeg">
+</audio>
 
+<!-- Music Control Button -->
+<button id="music-toggle" class="btn btn-outline-light" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+    🎵 Música: OFF
+</button>
     <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="main.js"></script>
 </body>
 
-</html>
+                    </html>
